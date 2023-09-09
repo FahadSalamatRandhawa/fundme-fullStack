@@ -8,9 +8,11 @@ export default function Home() {
     const [address,setAddress]=useState<null|string>()
   
   useEffect(()=>{
-    function handleWalletChange(address:any) {
-      if(address){
-        setAddress(address);
+    function handleWalletChange(account:any) {
+      console.log(account)
+      if(account.length>0){
+        setAddress(account[0]);
+        console.log('new account : ',account)
       }else{
         setAddress(null)
       }
@@ -19,6 +21,14 @@ export default function Home() {
       const provider = await detectEthereumProvider({ silent: true })
       console.log(provider)
       setHasProvider(Boolean(provider)) // transform provider to true or false
+
+      if(provider){
+        const account:string[] = await window.ethereum.request(         /* New */
+          { method: 'eth_accounts' }                            /* New */
+        )
+        handleWalletChange(account)
+        window.ethereum.on('accountsChanged', handleWalletChange)
+      }
     }
 
     getProvider()
@@ -28,16 +38,16 @@ export default function Home() {
   },[])
 
   async function connectWallet() {
-    const account=(await window.ethereum.request({method:"eth_requestAccounts"}))[0]
-    setAddress(account);
+    const myaccount=(await window.ethereum.request({method:"eth_requestAccounts"}))[0]
+    setAddress(myaccount);
   }
   
   return (
     <div>
       <div>Injected Provider {hasProvider ? 'DOES' : 'DOES NOT'} Exist</div>
-      { hasProvider &&
+      
         <button className='text-ellipsis' id='connectButton' disabled={!hasProvider} onClick={connectWallet}>{address?address:hasProvider?"Connect MetaMask":"Add metamask"}</button>
-      }
+      
     </div>
   )
 }
